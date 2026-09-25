@@ -1,0 +1,6 @@
+{
+  "name": "BEM RDM FH UB - Portal Seleksi",
+  "description": "Portal Seleksi dan Pengumuman Resmi Hasil Rekrutmen Staff Muda BEM RDM Fakultas Hukum Universitas Brawijaya.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
