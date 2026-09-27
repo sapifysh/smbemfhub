@@ -86,7 +86,7 @@ export const PrintableResult: React.FC<PrintableResultProps> = ({ result }) => {
       {/* Narrative Intro */}
       <div className="text-xs leading-relaxed space-y-4 mb-6 font-normal">
         <p className="leading-relaxed text-slate-700">
-          Berdasarkan hasil rangkaian proses evaluasi, verifikasi berkas, dan sidang pleno penetapan kelulusan calon fungsionaris Staff Muda Badan Eksekutif Mahasiswa Republik Daerah Mahasiswa Fakultas Hukum Universitas Brawijaya (BEM RDM FHUB) Kabinet Resonansi Kita, bersama ini menerangkan bahwa mahasiswa:
+          Berdasarkan hasil rangkaian proses evaluasi, verifikasi berkas, dan sidang pleno penetapan kelulusan calon fungsionaris Staf Muda Badan Eksekutif Mahasiswa Republik Daerah Mahasiswa Fakultas Hukum Universitas Brawijaya (BEM RDM FHUB) Kabinet Resonansi Kita, bersama ini menerangkan bahwa mahasiswa:
         </p>
 
         {/* Applicant Identity Table */}
@@ -128,15 +128,15 @@ export const PrintableResult: React.FC<PrintableResultProps> = ({ result }) => {
         {/* Verdict Details */}
         {isPassed ? (
           <p className="leading-relaxed text-slate-700 font-normal">
-            Dinyatakan <strong className="font-bold text-slate-900">LULUS SELEKSI</strong> dan ditetapkan secara sah sebagai <strong className="font-bold text-slate-900">Staff Muda BEM RDM FHUB Kabinet Resonansi Kita Periode 2026/2027</strong>. Yang bersangkutan berhak dan berkewajiban untuk mengikuti tahapan First Gathering serta pembekalan fungsionaris sesuai ketetapan organisasi.
+            Dinyatakan <strong className="font-bold text-slate-900">LULUS SELEKSI</strong> dan ditetapkan secara sah sebagai <strong className="font-bold text-slate-900">Staf Muda BEM RDM FHUB Kabinet Resonansi Kita Periode 2026/2027</strong>. Yang bersangkutan berhak dan berkewajiban untuk mengikuti tahapan First Gathering serta pembekalan fungsionaris sesuai ketetapan organisasi.
           </p>
         ) : isPending ? (
           <p className="leading-relaxed text-slate-700 font-normal">
-            Hasil seleksi Staff Muda BEM RDM FHUB Kabinet Resonansi Kita untuk yang bersangkutan saat ini sedang dalam proses penetapan pleno panitia. Silakan kembali memeriksa pengumuman secara berkala.
+            Hasil seleksi Staf Muda BEM RDM FHUB Kabinet Resonansi Kita untuk yang bersangkutan saat ini sedang dalam proses penetapan pleno panitia. Silakan kembali memeriksa pengumuman secara berkala.
           </p>
         ) : (
           <p className="leading-relaxed text-slate-700 font-normal">
-            Dinyatakan telah mengikuti seluruh rangkaian seleksi Staff Muda BEM RDM FHUB Kabinet Resonansi Kita. Panitia Seleksi dan BPH BEM RDM FHUB menyampaikan apresiasi setinggi-tingginya atas partisipasi dan dedikasi yang ditunjukkan.
+            Dinyatakan telah mengikuti seluruh rangkaian seleksi Staf Muda BEM RDM FHUB Kabinet Resonansi Kita. Panitia Seleksi dan BPH BEM RDM FHUB menyampaikan apresiasi setinggi-tingginya atas partisipasi dan dedikasi yang ditunjukkan.
           </p>
         )}
 

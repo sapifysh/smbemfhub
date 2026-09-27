@@ -81,7 +81,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ result, on
             <div className="flex justify-between py-2 border-b border-slate-200/50">
               <span className="text-slate-500 font-medium">Seleksi</span>
               <span className="font-normal text-slate-800 text-right">
-                Seleksi Staff Muda BEM RDM FHUB
+                Seleksi Staf Muda BEM RDM FHUB
               </span>
             </div>
 

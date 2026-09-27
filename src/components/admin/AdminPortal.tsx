@@ -331,7 +331,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 Admin — Hasil Seleksi
               </h2>
               <div className="text-[11px] text-amber-300 font-semibold uppercase">
-                Seleksi Staff Muda BEM RDM FHUB • Kabinet Resonansi Kita
+                Seleksi Staf Muda BEM RDM FHUB • Kabinet Resonansi Kita
               </div>
             </div>
           </div>

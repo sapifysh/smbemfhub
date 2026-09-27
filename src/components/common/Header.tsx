@@ -1,21 +1,17 @@
 import React from 'react';
 import { BEM_EMBLEM_URL } from '../../assets/emblem';
-import { Shield, ArrowLeft, Sun, Moon } from 'lucide-react';
+import { Shield, ArrowLeft } from 'lucide-react';
 
 interface HeaderProps {
   onOpenAdmin: () => void;
   onGoHome?: () => void;
   showBackToHome?: boolean;
-  theme?: 'light' | 'dark';
-  onToggleTheme?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   onOpenAdmin,
   onGoHome,
   showBackToHome = false,
-  theme = 'light',
-  onToggleTheme,
 }) => {
   return (
     <header className="w-full apple-liquid-glass-header sticky top-0 z-30 transition-all no-print">
@@ -46,51 +42,29 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </div>
             <div>
-              <div className="font-bold text-sm tracking-tight text-slate-900 dark:text-slate-100 leading-tight">
+              <div className="font-bold text-sm tracking-tight text-slate-900 leading-tight">
                 BEM RDM FHUB
               </div>
-              <div className="text-[11px] font-medium text-slate-500 dark:text-slate-400 tracking-wide uppercase">
+              <div className="text-[11px] font-medium text-slate-500 tracking-wide uppercase">
                 Kabinet Resonansi Kita
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right: Selection Label, Theme Toggle & Admin Shortcut */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium apple-liquid-glass-subtle text-slate-700 dark:text-slate-300">
-            Seleksi Staff Muda
+        {/* Right: Selection Label & Admin Shortcut */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="hidden sm:inline-flex items-center px-3 py-1 rounded-full text-xs font-medium apple-liquid-glass-subtle text-slate-700">
+            Seleksi Staf Muda
           </div>
-
-          {onToggleTheme && (
-            <button
-              type="button"
-              onClick={onToggleTheme}
-              className="p-2 sm:px-2.5 sm:py-1.5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 apple-liquid-glass-button rounded-xl cursor-pointer transition-all"
-              title={theme === 'light' ? 'Beralih ke Dark Mode' : 'Beralih ke Light Mode'}
-              aria-label="Toggle theme"
-            >
-              {theme === 'light' ? (
-                <>
-                  <Moon className="w-3.5 h-3.5 text-slate-600" />
-                  <span className="hidden md:inline text-[11px]">Dark</span>
-                </>
-              ) : (
-                <>
-                  <Sun className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden md:inline text-[11px]">Light</span>
-                </>
-              )}
-            </button>
-          )}
 
           <button
             type="button"
             onClick={onOpenAdmin}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white apple-liquid-glass-button rounded-xl cursor-pointer"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-700 hover:text-slate-950 apple-liquid-glass-button rounded-xl cursor-pointer"
             title="Akses Administrasi Panitia"
           >
-            <Shield className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
+            <Shield className="w-3.5 h-3.5 text-slate-600" />
             <span className="hidden md:inline">Admin</span>
           </button>
         </div>

@@ -325,7 +325,7 @@ export const api = {
         announcement_date: item.announcement_date || '24 September 2026',
         result_id: resultId,
         cabinet: 'Kabinet Resonansi Kita',
-        selection_title: 'Seleksi Staff Muda BEM RDM FHUB',
+        selection_title: 'Seleksi Staf Muda BEM RDM FHUB',
         verification_url: `/result/${resultId}`,
       },
     };
@@ -364,7 +364,7 @@ export const api = {
           status: item.status,
           division: item.ministry || item.division || 'Umum',
           ministry: item.ministry || item.division || 'Umum',
-          selection_title: 'Seleksi Staff Muda BEM RDM FHUB',
+          selection_title: 'Seleksi Staf Muda BEM RDM FHUB',
           cabinet: 'Kabinet Resonansi Kita',
           announcement_date: item.announcement_date || '24 September 2026',
           institution: 'BEM RDM Fakultas Hukum Universitas Brawijaya',
