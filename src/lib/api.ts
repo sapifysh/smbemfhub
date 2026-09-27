@@ -2,7 +2,8 @@ import { ApplicantResult, VerificationData, AdminApplicant, AdminStats } from '.
 import { MINISTRIES, isValidMinistry } from '../constants/ministries';
 
 // Environment variable for Google Apps Script Web App URL
-const GAS_URL = (import.meta.env.VITE_GOOGLE_APPS_SCRIPT_URL || '').trim();
+export const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbyShim2qbVBZh7E8_Hu0C5s0HcpHTUQkXGoQUP2xOdqi36s9I4V1eQOsE4zq6807Auy/exec';
+const GAS_URL = (import.meta.env.VITE_GOOGLE_APPS_SCRIPT_URL || DEFAULT_GAS_URL).trim();
 const DEFAULT_ADMIN_TOKEN = (import.meta.env.VITE_ADMIN_TOKEN || 'admin-token-bem-2026').trim();
 
 export interface AppsScriptParticipant {
@@ -148,6 +149,8 @@ async function callViaProxy<T>(
 /**
  * 1. getParticipantByNim(nim) - Public lookup for single participant
  * Only returns minimal public fields: nim, name, ministry, status, announcement_date
+ * Directly queries the Google Apps Script Web App endpoint:
+ * GET https://script.google.com/macros/s/.../exec?action=getParticipant&nim=USER_NIM
  */
 export async function getParticipantByNim(nim: string): Promise<{
   success: boolean;
@@ -155,16 +158,44 @@ export async function getParticipantByNim(nim: string): Promise<{
   error?: string;
   message?: string;
 }> {
-  const cleanNim = nim.replace(/\D/g, '').trim();
-  if (!cleanNim || cleanNim.length < 5) {
+  const cleanNim = nim.trim();
+  if (!cleanNim) {
     return {
       success: false,
       error: 'INVALID_NIM',
-      message: 'Format NIM tidak valid. Pastikan memasukkan digit angka yang benar.',
+      message: 'Format NIM tidak valid. Pastikan memasukkan NIM yang benar.',
     };
   }
 
-  return await callAppsScript<AppsScriptParticipant>('GET', 'getParticipant', { nim: cleanNim });
+  // Construct direct Google Apps Script Web App URL with encodeURIComponent
+  const targetUrl = `${GAS_URL}?action=getParticipant&nim=${encodeURIComponent(cleanNim)}`;
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: 'GET',
+      redirect: 'follow',
+    });
+
+    const json = await response.json();
+    return json;
+  } catch (err: any) {
+    console.warn('[AppsScript Direct GET failed, trying proxy fallback]:', err);
+    // If browser CORS or direct fetch encounters network issue, fallback to backend proxy
+    try {
+      const proxyUrl = `/api/apps-script?action=getParticipant&nim=${encodeURIComponent(cleanNim)}`;
+      const proxyRes = await fetch(proxyUrl, {
+        method: 'GET',
+      });
+      const proxyJson = await proxyRes.json();
+      return proxyJson;
+    } catch (proxyErr: any) {
+      return {
+        success: false,
+        error: 'NETWORK_ERROR',
+        message: 'Gagal terhubung ke server pangkalan data Google Apps Script. Silakan periksa koneksi internet Anda.',
+      };
+    }
+  }
 }
 
 /**
@@ -265,27 +296,28 @@ export const api = {
     const res = await getParticipantByNim(nim);
 
     if (!res.success || !res.data) {
-      if (res.error === 'PARTICIPANT_NOT_FOUND' || res.message?.includes('tidak ditemukan')) {
+      if (res.error === 'PARTICIPANT_NOT_FOUND') {
         return {
           success: false,
-          error: 'Data tidak ditemukan.\nPastikan NIM yang kamu masukkan sesuai dengan data pendaftaran.',
+          error: 'Data tidak ditemukan. Pastikan NIM yang kamu masukkan sesuai dengan data pendaftaran.',
         };
       }
       return {
         success: false,
-        error: res.message || 'Data peserta tidak ditemukan. Pastikan NIM yang dimasukkan sudah benar.',
+        error: res.message || 'Terjadi gangguan saat menghubungi server hasil seleksi. Silakan coba beberapa saat lagi.',
       };
     }
 
     const item = res.data;
-    const cleanNim = item.nim;
-    const resultId = `SMBEM2026-${cleanNim.slice(-5)}`;
+    const cleanNim = String(item.nim || '').trim();
+    const resultSuffix = cleanNim.length >= 5 ? cleanNim.slice(-5) : cleanNim.padStart(5, '0');
+    const resultId = `SMBEM2026-${resultSuffix || '00000'}`;
 
     return {
       success: true,
       data: {
-        name: item.name,
-        nim: item.nim,
+        name: String(item.name || ''),
+        nim: cleanNim,
         status: item.status,
         division: item.ministry || item.division || 'Umum',
         ministry: item.ministry || item.division || 'Umum',
@@ -406,19 +438,23 @@ export const api = {
     }
 
     const rawList = res.data.participants || [];
-    const applicants: AdminApplicant[] = rawList.map((row) => ({
-      id: row.id || `p-${row.nim}`,
-      nim: row.nim,
-      name: row.name,
-      division: row.ministry || row.division || 'Umum',
-      ministry: row.ministry || row.division || 'Umum',
-      status: row.status,
-      selection_stage: 'Tahap Akhir (Sidang Pleno)',
-      announcement_date: row.announcement_date || '24 September 2026',
-      result_id: `SMBEM2026-${row.nim.slice(-5)}`,
-      created_at: row.created_at || new Date().toISOString(),
-      updated_at: row.updated_at || new Date().toISOString(),
-    }));
+    const applicants: AdminApplicant[] = rawList.map((row) => {
+      const rowNimStr = String(row.nim || '').trim();
+      const rowSuffix = rowNimStr.length >= 5 ? rowNimStr.slice(-5) : rowNimStr.padStart(5, '0');
+      return {
+        id: row.id || `p-${rowNimStr}`,
+        nim: rowNimStr,
+        name: String(row.name || ''),
+        division: row.ministry || row.division || 'Umum',
+        ministry: row.ministry || row.division || 'Umum',
+        status: row.status,
+        selection_stage: 'Tahap Akhir (Sidang Pleno)',
+        announcement_date: row.announcement_date || '24 September 2026',
+        result_id: `SMBEM2026-${rowSuffix || '00000'}`,
+        created_at: row.created_at || new Date().toISOString(),
+        updated_at: row.updated_at || new Date().toISOString(),
+      };
+    });
 
     const total = res.data.total ?? applicants.length;
     const passed = res.data.passed ?? applicants.filter((a) => a.status === 'PASSED').length;
@@ -462,18 +498,20 @@ export const api = {
     }
 
     const d = res.data;
+    const dNimStr = String(d.nim || applicant.nim || '').trim();
+    const dSuffix = dNimStr.length >= 5 ? dNimStr.slice(-5) : dNimStr.padStart(5, '0');
     return {
       success: true,
       data: {
-        id: d.id || `p-${d.nim}`,
-        nim: d.nim,
-        name: d.name,
+        id: d.id || `p-${dNimStr}`,
+        nim: dNimStr,
+        name: String(d.name || applicant.name || ''),
         division: d.ministry || applicant.division,
         ministry: d.ministry || applicant.division,
         status: d.status,
         selection_stage: 'Tahap Akhir (Sidang Pleno)',
         announcement_date: d.announcement_date || '24 September 2026',
-        result_id: `SMBEM2026-${d.nim.slice(-5)}`,
+        result_id: `SMBEM2026-${dSuffix || '00000'}`,
         created_at: d.created_at || new Date().toISOString(),
         updated_at: d.updated_at || new Date().toISOString(),
       },
@@ -507,18 +545,20 @@ export const api = {
     }
 
     const d = res.data;
+    const updNimStr = String(d.nim || updates.nim || targetNim || '').trim();
+    const updSuffix = updNimStr.length >= 5 ? updNimStr.slice(-5) : updNimStr.padStart(5, '0');
     return {
       success: true,
       data: {
-        id: d.id || `p-${d.nim}`,
-        nim: d.nim,
-        name: d.name,
+        id: d.id || `p-${updNimStr}`,
+        nim: updNimStr,
+        name: String(d.name || updates.name || ''),
         division: d.ministry || 'Umum',
         ministry: d.ministry || 'Umum',
         status: d.status,
         selection_stage: 'Tahap Akhir (Sidang Pleno)',
         announcement_date: d.announcement_date || '24 September 2026',
-        result_id: `SMBEM2026-${d.nim.slice(-5)}`,
+        result_id: `SMBEM2026-${updSuffix || '00000'}`,
         created_at: d.created_at || new Date().toISOString(),
         updated_at: d.updated_at || new Date().toISOString(),
       },

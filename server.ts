@@ -65,61 +65,17 @@ async function startServer() {
 
   // Google Apps Script Proxy Endpoint
   app.all('/api/apps-script', async (req: Request, res: Response) => {
-    const gasUrl = (process.env.VITE_GOOGLE_APPS_SCRIPT_URL || process.env.GOOGLE_APPS_SCRIPT_URL || '').trim();
+    const gasUrl = (
+      process.env.VITE_GOOGLE_APPS_SCRIPT_URL ||
+      process.env.GOOGLE_APPS_SCRIPT_URL ||
+      'https://script.google.com/macros/s/AKfycbyShim2qbVBZh7E8_Hu0C5s0HcpHTUQkXGoQUP2xOdqi36s9I4V1eQOsE4zq6807Auy/exec'
+    ).trim();
 
     if (!gasUrl || !gasUrl.startsWith('https://script.google.com/macros/s/')) {
-      // Local fallback handler if Google Apps Script URL has not been supplied yet
-      const action = req.body?.action || req.query.action;
-      if (action === 'getParticipant') {
-        const nim = String(req.body?.nim || req.query.nim || '').replace(/\D/g, '').trim();
-        const found = ApplicantsStore.getByNim(nim);
-        if (!found) {
-          res.status(404).json({ success: false, error: 'PARTICIPANT_NOT_FOUND', message: 'Data peserta tidak ditemukan.' });
-          return;
-        }
-        res.json({
-          success: true,
-          data: {
-            nim: found.nim,
-            name: found.name,
-            ministry: found.division,
-            status: found.status,
-            announcement_date: found.announcement_date,
-          },
-        });
-        return;
-      } else if (action === 'listParticipants') {
-        const all = ApplicantsStore.getAll();
-        const passed = all.filter((a) => a.status === 'PASSED').length;
-        const failed = all.filter((a) => a.status === 'FAILED').length;
-        const pending = all.filter((a) => a.status === 'PENDING').length;
-        res.json({
-          success: true,
-          data: {
-            total: all.length,
-            passed,
-            failed,
-            pending,
-            percentage: all.length > 0 ? Math.round((passed / all.length) * 100) : 0,
-            participants: all.map((a) => ({
-              id: a.id,
-              nim: a.nim,
-              name: a.name,
-              ministry: a.division,
-              status: a.status,
-              announcement_date: a.announcement_date,
-              created_at: a.created_at,
-              updated_at: a.updated_at,
-            })),
-          },
-        });
-        return;
-      }
-
       res.status(400).json({
         success: false,
         error: 'GAS_NOT_CONFIGURED',
-        message: 'Google Apps Script Web App URL belum dikonfigurasi. Atur VITE_GOOGLE_APPS_SCRIPT_URL di .env.',
+        message: 'Google Apps Script Web App URL belum dikonfigurasi.',
       });
       return;
     }
