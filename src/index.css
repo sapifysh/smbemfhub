@@ -56,6 +56,14 @@
    Refined translucent optics with specular highlights & deep backdrop blurs
    ========================================================================== */
 
+/* Light mode primary generated background layer */
+.bg-light-textured {
+  background-image: url('/liquid-glass-bg.jpg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+}
+
 .apple-liquid-glass {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.74) 0%, rgba(255, 255, 255, 0.52) 100%);
   backdrop-filter: blur(28px) saturate(190%);
@@ -69,19 +77,19 @@
 }
 
 .apple-liquid-glass-card {
-  background: linear-gradient(140deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.62) 100%);
+  background: linear-gradient(140deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 255, 255, 0.65) 100%);
   backdrop-filter: blur(36px) saturate(210%);
   -webkit-backdrop-filter: blur(36px) saturate(210%);
   border: 1px solid rgba(255, 255, 255, 0.95);
   box-shadow: 
-    0 28px 64px -16px rgba(15, 23, 42, 0.09),
+    0 28px 64px -16px rgba(15, 23, 42, 0.08),
     0 4px 16px -2px rgba(15, 23, 42, 0.03),
     inset 0 2px 2.5px 0 rgba(255, 255, 255, 1),
     inset 0 -1px 1.5px 0 rgba(0, 0, 0, 0.02);
 }
 
 .apple-liquid-glass-header {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(255, 255, 255, 0.64) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.80) 0%, rgba(255, 255, 255, 0.68) 100%);
   backdrop-filter: blur(28px) saturate(190%);
   -webkit-backdrop-filter: blur(28px) saturate(190%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.85);
@@ -91,7 +99,7 @@
 }
 
 .apple-liquid-glass-footer {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.75) 100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.68) 0%, rgba(255, 255, 255, 0.78) 100%);
   backdrop-filter: blur(28px) saturate(190%);
   -webkit-backdrop-filter: blur(28px) saturate(190%);
   border-top: 1px solid rgba(255, 255, 255, 0.85);
@@ -99,7 +107,7 @@
 }
 
 .apple-liquid-glass-subtle {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.44) 100%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.65) 0%, rgba(255, 255, 255, 0.48) 100%);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.82);
@@ -109,7 +117,7 @@
 }
 
 .apple-liquid-glass-input {
-  background: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(18px) saturate(180%);
   -webkit-backdrop-filter: blur(18px) saturate(180%);
   border: 1px solid rgba(255, 255, 255, 0.92);
@@ -119,7 +127,7 @@
 }
 
 .apple-liquid-glass-input:focus {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(255, 255, 255, 0.92);
   border-color: rgba(15, 23, 42, 0.35);
   box-shadow: 
     0 0 0 3px rgba(15, 23, 42, 0.06),
@@ -127,7 +135,7 @@
 }
 
 .apple-liquid-glass-modal {
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.78) 100%);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94) 0%, rgba(255, 255, 255, 0.82) 100%);
   backdrop-filter: blur(40px) saturate(220%);
   -webkit-backdrop-filter: blur(40px) saturate(220%);
   border: 1px solid rgba(255, 255, 255, 0.96);
@@ -135,6 +143,47 @@
     0 36px 80px -16px rgba(15, 23, 42, 0.18),
     0 12px 28px -6px rgba(15, 23, 42, 0.06),
     inset 0 2px 2.5px 0 rgba(255, 255, 255, 1);
+}
+
+/* Dark mode overrides for Apple Liquid Glass */
+.dark .apple-liquid-glass-card {
+  background: linear-gradient(140deg, rgba(15, 23, 42, 0.82) 0%, rgba(30, 41, 59, 0.70) 100%);
+  backdrop-filter: blur(36px) saturate(200%);
+  -webkit-backdrop-filter: blur(36px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 
+    0 28px 64px -16px rgba(0, 0, 0, 0.5),
+    inset 0 1.5px 2px 0 rgba(255, 255, 255, 0.12);
+}
+
+.dark .apple-liquid-glass-header {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(15, 23, 42, 0.78) 100%);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px -4px rgba(0, 0, 0, 0.35);
+}
+
+.dark .apple-liquid-glass-footer {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.92) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .apple-liquid-glass-subtle {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.65) 0%, rgba(15, 23, 42, 0.55) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .apple-liquid-glass-button {
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.85) 0%, rgba(15, 23, 42, 0.75) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.3);
+}
+
+.dark .apple-liquid-glass-input {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1.5px 3px 0 rgba(0, 0, 0, 0.2);
 }
 
 .apple-liquid-glass-dark {

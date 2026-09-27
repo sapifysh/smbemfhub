@@ -39,22 +39,22 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
           </div>
 
           <div className="space-y-1.5">
-            <div className="font-bold text-slate-900 tracking-tight text-base sm:text-lg">
+            <div className="font-bold text-slate-900 dark:text-slate-100 tracking-tight text-base sm:text-lg">
               BEM RDM FHUB
             </div>
-            <div className="inline-block px-3.5 py-1 rounded-full text-xs font-semibold tracking-wider uppercase apple-liquid-glass-subtle text-amber-900 border border-amber-200/70 shadow-2xs">
+            <div className="inline-block px-3.5 py-1 rounded-full text-xs font-semibold tracking-wider uppercase apple-liquid-glass-subtle text-amber-900 dark:text-amber-300 border border-amber-200/70 dark:border-amber-500/30 shadow-2xs">
               Kabinet Resonansi Kita
             </div>
           </div>
 
           <div className="pt-2 space-y-2">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900 dark:text-slate-50 tracking-tight">
               Seleksi Staff Muda BEM RDM FHUB
             </h1>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-700">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-700 dark:text-slate-200">
               Pengumuman Hasil Seleksi
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 max-w-md mx-auto leading-relaxed font-normal">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed font-normal">
               Masukkan NIM untuk mengetahui hasil seleksi Staff Muda BEM RDM FHUB Kabinet Resonansi Kita.
             </p>
           </div>
@@ -66,7 +66,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
             <div>
               <label
                 htmlFor="nim-input"
-                className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-2"
+                className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2"
               >
                 Nomor Induk Mahasiswa (NIM)
               </label>
@@ -83,7 +83,7 @@ export const SearchSection: React.FC<SearchSectionProps> = ({
                     if (errorMessage) onClearError();
                   }}
                   placeholder="Masukkan NIM"
-                  className="w-full h-13 px-4 text-base sm:text-lg font-normal tracking-wider text-slate-900 apple-liquid-glass-input rounded-2xl focus:outline-none transition-all placeholder:text-slate-400 placeholder:text-base placeholder:tracking-normal"
+                  className="w-full h-13 px-4 text-base sm:text-lg font-normal tracking-wider text-slate-900 dark:text-slate-100 apple-liquid-glass-input rounded-2xl focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 placeholder:text-base placeholder:tracking-normal"
                   disabled={isLoading}
                   autoFocus
                 />

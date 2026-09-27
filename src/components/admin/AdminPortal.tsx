@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { api } from '../../services/api';
 import { AdminApplicant } from '../../types';
+import { MINISTRIES, isValidMinistry } from '../../constants/ministries';
 import { BEM_EMBLEM_URL } from '../../assets/emblem';
-import { isSupabaseConfigured } from '../../lib/supabase';
+import { isGoogleAppsScriptConfigured } from '../../lib/api';
 import {
   Users,
   CheckCircle2,
@@ -23,23 +24,14 @@ import {
   Loader2,
   Clock,
   Database,
+  ExternalLink,
+  Check,
 } from 'lucide-react';
 
 interface AdminPortalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const DIVISIONS = [
-  'Kajian dan Aksi Strategis',
-  'Pengembangan Sumber Daya Mahasiswa',
-  'Advokasi dan Kesejahteraan Mahasiswa',
-  'Riset dan Keilmuan Hukum',
-  'Media, Komunikasi & Informasi',
-  'Hubungan Eksternal & Diplomasi Kampus',
-  'Seni, Olahraga & Apresiasi Mahasiswa',
-  'Kewirausahaan & Ekonomi Kreatif',
-];
 
 export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => {
   const [token, setToken] = useState<string>(() => localStorage.getItem('bem_admin_token') || '');
@@ -65,11 +57,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [csvContent, setCsvContent] = useState('');
   const [importMessage, setImportMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [importSummary, setImportSummary] = useState<{
+    imported: number;
+    skipped: number;
+    duplicate: number;
+    invalid: number;
+    failed: number;
+  } | null>(null);
 
   // Form states for Add/Edit
   const [formNim, setFormNim] = useState('');
   const [formName, setFormName] = useState('');
-  const [formDivision, setFormDivision] = useState(DIVISIONS[0]);
+  const [formDivision, setFormDivision] = useState<string>('');
   const [formStatus, setFormStatus] = useState<'PASSED' | 'FAILED' | 'PENDING'>('PASSED');
   const [formError, setFormError] = useState('');
 
@@ -128,7 +127,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     window.history.pushState(null, '', '/admin');
   };
 
-  // Stats calculation
+  // Stats calculation directly from authoritative Google Sheet data
   const stats = useMemo(() => {
     const total = applicants.length;
     const passed = applicants.filter((a) => a.status === 'PASSED').length;
@@ -155,7 +154,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   const handleOpenAdd = () => {
     setFormNim('');
     setFormName('');
-    setFormDivision(DIVISIONS[0]);
+    setFormDivision('');
     setFormStatus('PASSED');
     setFormError('');
     setIsAddModalOpen(true);
@@ -170,6 +169,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
       return;
     }
 
+    if (!formDivision) {
+      setFormError('Silakan pilih Kementerian Penempatan.');
+      return;
+    }
+
     setIsSaving(true);
     const res = await api.addAdminApplicant(token, {
       nim: formNim.trim(),
@@ -180,10 +184,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     setIsSaving(false);
 
     if (res.success && res.data) {
-      setApplicants((prev) => [res.data!, ...prev]);
       setIsAddModalOpen(false);
-      setToastMessage({ type: 'success', text: 'Data peserta berhasil ditambahkan.' });
+      setToastMessage({ type: 'success', text: 'Data peserta berhasil ditambahkan ke Google Sheets.' });
       setTimeout(() => setToastMessage(null), 3500);
+      // Authoritative refresh from Google Sheets
+      await loadApplicants(token);
     } else {
       setFormError(res.error || 'Terjadi kesalahan. Data belum berhasil disimpan.');
     }
@@ -204,6 +209,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     if (!editingApplicant) return;
     setFormError('');
 
+    if (!formDivision) {
+      setFormError('Silakan pilih Kementerian Penempatan.');
+      return;
+    }
+
     setIsSaving(true);
     const res = await api.updateAdminApplicant(token, editingApplicant.id, {
       nim: formNim.trim(),
@@ -214,12 +224,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     setIsSaving(false);
 
     if (res.success && res.data) {
-      setApplicants((prev) =>
-        prev.map((a) => (a.id === editingApplicant.id ? res.data! : a))
-      );
       setEditingApplicant(null);
-      setToastMessage({ type: 'success', text: 'Data peserta berhasil diperbarui.' });
+      setToastMessage({ type: 'success', text: 'Data peserta berhasil diperbarui di Google Sheets.' });
       setTimeout(() => setToastMessage(null), 3500);
+      // Authoritative refresh from Google Sheets
+      await loadApplicants(token);
     } else {
       setFormError(res.error || 'Terjadi kesalahan. Data belum berhasil disimpan.');
     }
@@ -235,10 +244,11 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
     setIsDeleting(false);
 
     if (res.success) {
-      setApplicants((prev) => prev.filter((a) => a.id !== deletingApplicant.id));
       setDeletingApplicant(null);
-      setToastMessage({ type: 'success', text: 'Peserta berhasil dihapus.' });
+      setToastMessage({ type: 'success', text: 'Peserta berhasil dihapus dari Google Sheets.' });
       setTimeout(() => setToastMessage(null), 3500);
+      // Authoritative refresh from Google Sheets
+      await loadApplicants(token);
     } else {
       setDeleteError(res.error || 'Terjadi kesalahan. Data belum berhasil disimpan.');
     }
@@ -248,6 +258,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
   const handleImportCsv = async () => {
     if (!csvContent.trim()) return;
     setImportMessage(null);
+    setImportSummary(null);
 
     // Parse CSV lines
     const lines = csvContent.trim().split('\n');
@@ -267,7 +278,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
         rows.push({
           nim: parts[0] || '',
           name: parts[1] || '',
-          division: parts[2] || 'Umum',
+          division: parts[2] || MINISTRIES[0],
           status: parts[3] || 'PASSED',
         });
       }
@@ -280,13 +291,19 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
     const res = await api.importCsv(token, rows);
     if (res.success) {
+      if (res.data) {
+        setImportSummary({
+          imported: res.data.imported ?? 0,
+          skipped: res.data.skipped ?? 0,
+          duplicate: res.data.duplicate ?? 0,
+          invalid: res.data.invalid ?? 0,
+          failed: res.data.failed ?? 0,
+        });
+      }
       setImportMessage({ type: 'success', text: res.message || 'Impor CSV berhasil diproses.' });
       setCsvContent('');
-      loadApplicants();
-      setTimeout(() => {
-        setIsImportModalOpen(false);
-        setImportMessage(null);
-      }, 1500);
+      // Authoritative refresh from Google Sheets
+      await loadApplicants(token);
     } else {
       setImportMessage({ type: 'error', text: res.error || 'Gagal memproses data CSV.' });
     }
@@ -422,8 +439,32 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
               </div>
             )}
             
-            {/* Statistics Row - Liquid Glass Cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Database Source of Truth Info Banner */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 px-4 py-2.5 rounded-2xl apple-liquid-glass-subtle text-xs border border-white/80">
+              <div className="flex items-center gap-2 text-slate-700">
+                <Database className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span>
+                  <strong className="font-semibold text-slate-900">Google Sheets API</strong> • Single Source of Truth
+                  <span className="text-slate-400 font-normal ml-1.5">(Tab: Participants)</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                {isGoogleAppsScriptConfigured() ? (
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-100/80 px-2.5 py-0.5 rounded-full border border-emerald-300/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                    Terhubung ke Web App
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-800 bg-amber-100/80 px-2.5 py-0.5 rounded-full border border-amber-300/80">
+                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                    Proxy Server Aktif
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Statistics Row - Liquid Glass Cards (5 Metrics) */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               <div className="p-4 rounded-2xl apple-liquid-glass-subtle">
                 <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
                   Total Peserta
@@ -453,9 +494,18 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
 
               <div className="p-4 rounded-2xl apple-liquid-glass-status-pending">
                 <div className="text-[11px] font-semibold text-amber-800 uppercase tracking-wider">
-                  Tingkat Kelulusan
+                  Menunggu Pengumuman
                 </div>
                 <div className="text-2xl font-bold text-amber-900 mt-1">
+                  {stats.pending}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl apple-liquid-glass-subtle col-span-2 sm:col-span-1">
+                <div className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
+                  Tingkat Kelulusan
+                </div>
+                <div className="text-2xl font-bold text-slate-900 mt-1">
                   {stats.percentage}%
                 </div>
               </div>
@@ -492,7 +542,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   className="px-3 py-2 text-xs apple-liquid-glass-input rounded-xl focus:outline-none cursor-pointer max-w-[180px] truncate"
                 >
                   <option value="ALL">Semua Kementerian</option>
-                  {DIVISIONS.map((div) => (
+                  {MINISTRIES.map((div) => (
                     <option key={div} value={div}>
                       {div}
                     </option>
@@ -679,8 +729,10 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   value={formDivision}
                   onChange={(e) => setFormDivision(e.target.value)}
                   className="w-full px-3 py-2 apple-liquid-glass-input rounded-xl focus:outline-none cursor-pointer"
+                  required
                 >
-                  {DIVISIONS.map((div) => (
+                  <option value="" disabled>Pilih Kementerian</option>
+                  {MINISTRIES.map((div) => (
                     <option key={div} value={div}>
                       {div}
                     </option>
@@ -805,8 +857,13 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                   value={formDivision}
                   onChange={(e) => setFormDivision(e.target.value)}
                   className="w-full px-3 py-2 apple-liquid-glass-input rounded-xl focus:outline-none cursor-pointer"
+                  required
                 >
-                  {DIVISIONS.map((div) => (
+                  <option value="" disabled>Pilih Kementerian</option>
+                  {formDivision && !MINISTRIES.includes(formDivision as any) && (
+                    <option value={formDivision}>{formDivision}</option>
+                  )}
+                  {MINISTRIES.map((div) => (
                     <option key={div} value={div}>
                       {div}
                     </option>
@@ -915,7 +972,7 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
               <div className="apple-liquid-glass-subtle p-3 rounded-xl text-[11px] text-slate-800 overflow-x-auto">
                 NIM, Nama, Kementerian, Status<br />
                 225150100111001, Arya Danendra, Kajian dan Aksi Strategis, PASSED<br />
-                225150100111002, Clarissa Amanda, Pengembangan Sumber Daya Mahasiswa, FAILED
+                225150100111002, Clarissa Amanda, Pengembangan dan Sumber Daya Manusia, FAILED
               </div>
             </div>
 
@@ -941,6 +998,31 @@ export const AdminPortal: React.FC<AdminPortalProps> = ({ isOpen, onClose }) => 
                 }`}
               >
                 {importMessage.text}
+              </div>
+            )}
+
+            {importSummary && (
+              <div className="grid grid-cols-5 gap-1.5 pt-1 text-center">
+                <div className="p-2 rounded-xl apple-liquid-glass-status-passed">
+                  <div className="text-[10px] text-emerald-700 font-semibold uppercase">Imported</div>
+                  <div className="text-sm font-bold text-emerald-900">{importSummary.imported}</div>
+                </div>
+                <div className="p-2 rounded-xl apple-liquid-glass-subtle">
+                  <div className="text-[10px] text-slate-500 font-semibold uppercase">Skipped</div>
+                  <div className="text-sm font-bold text-slate-800">{importSummary.skipped}</div>
+                </div>
+                <div className="p-2 rounded-xl apple-liquid-glass-status-pending">
+                  <div className="text-[10px] text-amber-700 font-semibold uppercase">Duplicate</div>
+                  <div className="text-sm font-bold text-amber-900">{importSummary.duplicate}</div>
+                </div>
+                <div className="p-2 rounded-xl bg-rose-50/70 border border-rose-200">
+                  <div className="text-[10px] text-rose-600 font-semibold uppercase">Invalid</div>
+                  <div className="text-sm font-bold text-rose-900">{importSummary.invalid}</div>
+                </div>
+                <div className="p-2 rounded-xl bg-rose-50/70 border border-rose-200">
+                  <div className="text-[10px] text-rose-600 font-semibold uppercase">Failed</div>
+                  <div className="text-sm font-bold text-rose-900">{importSummary.failed}</div>
+                </div>
               </div>
             )}
 

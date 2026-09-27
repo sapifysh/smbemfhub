@@ -10,6 +10,7 @@ interface VerificationModalProps {
 
 export const VerificationModal: React.FC<VerificationModalProps> = ({ result, onClose }) => {
   const isPassed = result.status === 'PASSED';
+  const isPending = result.status === 'PENDING';
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/45 backdrop-blur-xl no-print animate-in fade-in duration-200">
@@ -100,10 +101,12 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({ result, on
                 className={`font-bold px-2.5 py-0.5 rounded-full text-[11px] tracking-wide status-lulus ${
                   isPassed
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : isPending
+                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
                     : 'bg-slate-100 text-slate-700 border border-slate-200'
                 }`}
               >
-                {isPassed ? 'LULUS' : 'BELUM LULUS'}
+                {isPassed ? 'LULUS' : isPending ? 'MENUNGGU PENGUMUMAN' : 'BELUM LULUS'}
               </span>
             </div>
 

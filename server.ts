@@ -63,6 +63,101 @@ async function startServer() {
     });
   });
 
+  // Google Apps Script Proxy Endpoint
+  app.all('/api/apps-script', async (req: Request, res: Response) => {
+    const gasUrl = (process.env.VITE_GOOGLE_APPS_SCRIPT_URL || process.env.GOOGLE_APPS_SCRIPT_URL || '').trim();
+
+    if (!gasUrl || !gasUrl.startsWith('https://script.google.com/macros/s/')) {
+      // Local fallback handler if Google Apps Script URL has not been supplied yet
+      const action = req.body?.action || req.query.action;
+      if (action === 'getParticipant') {
+        const nim = String(req.body?.nim || req.query.nim || '').replace(/\D/g, '').trim();
+        const found = ApplicantsStore.getByNim(nim);
+        if (!found) {
+          res.status(404).json({ success: false, error: 'PARTICIPANT_NOT_FOUND', message: 'Data peserta tidak ditemukan.' });
+          return;
+        }
+        res.json({
+          success: true,
+          data: {
+            nim: found.nim,
+            name: found.name,
+            ministry: found.division,
+            status: found.status,
+            announcement_date: found.announcement_date,
+          },
+        });
+        return;
+      } else if (action === 'listParticipants') {
+        const all = ApplicantsStore.getAll();
+        const passed = all.filter((a) => a.status === 'PASSED').length;
+        const failed = all.filter((a) => a.status === 'FAILED').length;
+        const pending = all.filter((a) => a.status === 'PENDING').length;
+        res.json({
+          success: true,
+          data: {
+            total: all.length,
+            passed,
+            failed,
+            pending,
+            percentage: all.length > 0 ? Math.round((passed / all.length) * 100) : 0,
+            participants: all.map((a) => ({
+              id: a.id,
+              nim: a.nim,
+              name: a.name,
+              ministry: a.division,
+              status: a.status,
+              announcement_date: a.announcement_date,
+              created_at: a.created_at,
+              updated_at: a.updated_at,
+            })),
+          },
+        });
+        return;
+      }
+
+      res.status(400).json({
+        success: false,
+        error: 'GAS_NOT_CONFIGURED',
+        message: 'Google Apps Script Web App URL belum dikonfigurasi. Atur VITE_GOOGLE_APPS_SCRIPT_URL di .env.',
+      });
+      return;
+    }
+
+    try {
+      const incomingMethod = req.method.toUpperCase();
+      const body = req.body || {};
+      const action = body.action || req.query.action || 'ping';
+
+      if (incomingMethod === 'GET') {
+        const queryUrl = new URL(gasUrl);
+        Object.entries(req.query).forEach(([k, v]) => {
+          if (v) queryUrl.searchParams.set(k, String(v));
+        });
+        const gasResponse = await fetch(queryUrl.toString(), { redirect: 'follow' });
+        const gasJson = await gasResponse.json();
+        res.json(gasJson);
+      } else {
+        // Forward POST payload to Google Apps Script
+        const gasResponse = await fetch(gasUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(body),
+          redirect: 'follow',
+        });
+        const gasJson = await gasResponse.json();
+        res.json(gasJson);
+      }
+    } catch (err: any) {
+      console.error('[GAS Proxy Error]', err);
+      res.status(500).json({
+        success: false,
+        error: 'PROXY_ERROR',
+        message: 'Gagal menghubungkan ke Google Apps Script: ' + err.message,
+      });
+    }
+  });
+
   // 1. Public NIM Result Lookup (rate-limited, minimal response)
   app.post('/api/check-result', rateLimiter, (req: Request, res: Response) => {
     const { nim } = req.body;

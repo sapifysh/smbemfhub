@@ -48,3 +48,6 @@ export interface AdminStats {
   failed: number;
   pending?: number;
 }
+
+export * from '../constants/ministries';
+

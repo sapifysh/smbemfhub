@@ -9,6 +9,7 @@ interface PrintableResultProps {
 
 export const PrintableResult: React.FC<PrintableResultProps> = ({ result }) => {
   const isPassed = result.status === 'PASSED';
+  const isPending = result.status === 'PENDING';
   const [qrDataUrl, setQrDataUrl] = useState<string>('');
 
   useEffect(() => {
@@ -111,8 +112,8 @@ export const PrintableResult: React.FC<PrintableResultProps> = ({ result }) => {
               <tr className="border-b border-slate-200 bg-slate-50/50">
                 <td className="py-2.5 px-4 font-medium text-slate-600">Status Kelulusan</td>
                 <td className="py-2.5 px-4">
-                  <span className={`font-bold text-base uppercase tracking-wide status-lulus ${isPassed ? 'text-emerald-700' : 'text-slate-800'}`}>
-                    {isPassed ? 'LULUS' : 'BELUM LULUS'}
+                  <span className={`font-bold text-base uppercase tracking-wide status-lulus ${isPassed ? 'text-emerald-700' : isPending ? 'text-amber-700' : 'text-slate-800'}`}>
+                    {isPassed ? 'LULUS' : isPending ? 'MENUNGGU PENGUMUMAN' : 'BELUM LULUS'}
                   </span>
                 </td>
               </tr>
@@ -128,6 +129,10 @@ export const PrintableResult: React.FC<PrintableResultProps> = ({ result }) => {
         {isPassed ? (
           <p className="leading-relaxed text-slate-700 font-normal">
             Dinyatakan <strong className="font-bold text-slate-900">LULUS SELEKSI</strong> dan ditetapkan secara sah sebagai <strong className="font-bold text-slate-900">Staff Muda BEM RDM FHUB Kabinet Resonansi Kita Periode 2026/2027</strong>. Yang bersangkutan berhak dan berkewajiban untuk mengikuti tahapan First Gathering serta pembekalan fungsionaris sesuai ketetapan organisasi.
+          </p>
+        ) : isPending ? (
+          <p className="leading-relaxed text-slate-700 font-normal">
+            Hasil seleksi Staff Muda BEM RDM FHUB Kabinet Resonansi Kita untuk yang bersangkutan saat ini sedang dalam proses penetapan pleno panitia. Silakan kembali memeriksa pengumuman secara berkala.
           </p>
         ) : (
           <p className="leading-relaxed text-slate-700 font-normal">
