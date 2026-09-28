@@ -6,3 +6,6 @@ coverage/
 *.log
 .env*
 !.env.example
+git add src/assets/images/
+git commit -m "add missing background images"
+git push
